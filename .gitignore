@@ -57,3 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Webstorm
+.idea
+.idea/inspectionProfiles/
+.idea/modules.xml
+.idea/nps-tools.iml
+.idea/workspace.xml

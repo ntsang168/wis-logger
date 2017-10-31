@@ -33,10 +33,10 @@ logger.error('An error message');
 ```
 The basic Console logger will produce this output:
 ```
-[2017-10-29T21:58:58.919Z] DEBUG: logger-test/17842 on ntsang-ibm.local: A debug message
-[2017-10-29T21:58:58.922Z]  INFO: logger-test/17842 on ntsang-ibm.local: An info message
-[2017-10-29T21:58:58.922Z]  WARN: logger-test/17842 on ntsang-ibm.local: A warning message
-[2017-10-29T21:58:58.922Z] ERROR: logger-test/17842 on ntsang-ibm.local: An error message
+[2017-10-29T21:58:58.919Z] DEBUG: logger-basic/17842 on ntsang-ibm.local: A debug message
+[2017-10-29T21:58:58.922Z]  INFO: logger-basic/17842 on ntsang-ibm.local: An info message
+[2017-10-29T21:58:58.922Z]  WARN: logger-basic/17842 on ntsang-ibm.local: A warning message
+[2017-10-29T21:58:58.922Z] ERROR: logger-basic/17842 on ntsang-ibm.local: An error message
 ```
 Create a logger with both Console logging and Cloudant logging.
 ```
@@ -57,10 +57,10 @@ logger.error({message: 'An error message'});
 ```
 The Console/Cloudant logger will product this output:
 ```
-[2017-10-29T21:58:58.929Z] DEBUG: logger-test/17842 on ntsang-ibm.local:  (message="A debug test")
-[2017-10-29T21:58:58.947Z]  INFO: logger-test/17842 on ntsang-ibm.local:  (message="An info message")
-[2017-10-29T21:58:58.950Z]  WARN: logger-test/17842 on ntsang-ibm.local:  (message="A warning message")
-[2017-10-29T21:58:58.951Z] ERROR: logger-test/17842 on ntsang-ibm.local:  (message="An error message")
+[2017-10-29T21:58:58.929Z] DEBUG: logger-cloudant/17842 on ntsang-ibm.local:  (message="A debug test")
+[2017-10-29T21:58:58.947Z]  INFO: logger-cloudant/17842 on ntsang-ibm.local:  (message="An info message")
+[2017-10-29T21:58:58.950Z]  WARN: logger-cloudant/17842 on ntsang-ibm.local:  (message="A warning message")
+[2017-10-29T21:58:58.951Z] ERROR: logger-cloudant/17842 on ntsang-ibm.local:  (message="An error message")
 ```
 Each logger call will also create a Cloudant document with this
 default format:
@@ -71,6 +71,7 @@ default format:
   "timestamp": "2017-10-31T00:17:52.326Z",
   "severity": "WARN",
   "hostname": "ntsang-ibm.local",
+  "appName": "logger-examples",
   "pid": 25801,
   "message": "loggerCloudant debug test"
 }

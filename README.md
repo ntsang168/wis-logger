@@ -52,12 +52,12 @@ const logger = require('wis-logger')({
 });
 logger.debug({message: 'A debug message'});
 logger.info({message: 'An info message'});
-logger.warn({messgae: 'A warning message'});
+logger.warn({messag`e: 'A warning message'});
 logger.error({message: 'An error message'});
 ```
 The Console/Cloudant logger will product this output:
 ```
-[2017-10-29T21:58:58.929Z] DEBUG: logger-cloudant/17842 on ntsang-ibm.local:  (message="A debug test")
+[2017-10-29T21:58:58.929Z] DEBUG: logger-cloudant/17842 on ntsang-ibm.local:  (message="A debug message")
 [2017-10-29T21:58:58.947Z]  INFO: logger-cloudant/17842 on ntsang-ibm.local:  (message="An info message")
 [2017-10-29T21:58:58.950Z]  WARN: logger-cloudant/17842 on ntsang-ibm.local:  (message="A warning message")
 [2017-10-29T21:58:58.951Z] ERROR: logger-cloudant/17842 on ntsang-ibm.local:  (message="An error message")

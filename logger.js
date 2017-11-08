@@ -107,34 +107,38 @@ module.exports = function(options) {
         if (typeof (logRecord) !== 'object') {
             console.error(new Error('CloudantStream expecting an object logRecord but received: %j', logRecord));
         } else {
-            logRecord.level = bunyan.nameFromLevel[logRecord.level].toUpperCase();
-            const logDocument = new cloudantStreamOpts.LogDocument(logRecord);
-            needle('post', cloudantStreamOpts.url, logDocument, cloudantStreamOpts.needleOpts)
-                .then(function(response) {
-                    if (cloudantStreamOpts.logHistory) {
-                        if (response.statusCode === 200 || response.statusCode === 201) {
-                            loggerCloudant.info({
-                                result: 'Successfully created Cloudant log document',
-                                statusCode: response.statusCode,
-                                statusMessage: response.statusMessage,
-                                body: response.body,
-                            });
-                        } else {
-                            loggerCloudant.error({
-                                result: 'Failed to create Cloudant log document',
-                                statusCode: response.statusCode,
-                                statusMessage: response.statusMessage,
-                                body: response.body,
-                            });
+            if (cloudantStreamOpts.url && cloudantStreamOpts.needleOpts.username && cloudantStreamOpts.needleOpts.password) {
+                logRecord.level = bunyan.nameFromLevel[logRecord.level].toUpperCase();
+                const logDocument = new cloudantStreamOpts.LogDocument(logRecord);
+                needle('post', cloudantStreamOpts.url, logDocument, cloudantStreamOpts.needleOpts)
+                    .then(function(response) {
+                        if (cloudantStreamOpts.logHistory) {
+                            if (response.statusCode === 200 || response.statusCode === 201) {
+                                loggerCloudant.info({
+                                    result: 'Successfully created Cloudant log document',
+                                    statusCode: response.statusCode,
+                                    statusMessage: response.statusMessage,
+                                    body: response.body,
+                                });
+                            } else {
+                                loggerCloudant.error({
+                                    result: 'Failed to create Cloudant log document',
+                                    statusCode: response.statusCode,
+                                    statusMessage: response.statusMessage,
+                                    body: response.body,
+                                });
+                            }
                         }
-                    }
-                })
-                .catch(function(error) {
-                    if (cloudantStreamOpts.logHistory) {
-                        loggerCloudant.error('Request to Cloudant failed');
-                        loggerCloudant.error(error);
-                    }
-                });
+                    })
+                    .catch(function(error) {
+                        if (cloudantStreamOpts.logHistory) {
+                            loggerCloudant.error('Request to Cloudant failed');
+                            loggerCloudant.error(error);
+                        }
+                    });
+            } else {
+                loggerCloudant.error('No Cloudant log document created, Cloudant URL and credentials are not configured');
+            }
         }
     };
 

@@ -1,7 +1,7 @@
 const bunyan = require('bunyan');
 const bformat = require('bunyan-format');
-const needle = require('needle');
 
+const CloudantStream = require('./lib/cloudant-stream');
 const WiSLogDocument = require('./lib/wis-log-document');
 
 /**
@@ -22,7 +22,7 @@ const WiSLogDocument = require('./lib/wis-log-document');
  *  - cloudantLogFilePath: log file path for storing history of Cloudant connections
  * @return {Logger} bunyan logger
  */
-module.exports = function(options) {
+function Logger(options) {
     // Set default bunyan options
     const bunyanOpts = {
         appName: 'wis-logger',
@@ -36,15 +36,11 @@ module.exports = function(options) {
     // Set default CloudantStream options
     const cloudantStreamOpts = {
         url: '',
+        username: '',
+        password: '',
         LogDocument: WiSLogDocument,
         logHistory: true,
         logFilePath: '',
-        needleOpts: {
-            json: true,
-            auth: 'basic',
-            username: '',
-            password: '',
-        },
     };
 
     // Update options based on parameters
@@ -67,13 +63,16 @@ module.exports = function(options) {
         cloudantStreamOpts.url = options.cloudantUrl;
     }
     if (options.cloudantUsername) {
-        cloudantStreamOpts.needleOpts.username = options.cloudantUsername;
+        cloudantStreamOpts.username = options.cloudantUsername;
     }
     if (options.cloudantPassword) {
-        cloudantStreamOpts.needleOpts.password = options.cloudantPassword;
+        cloudantStreamOpts.password = options.cloudantPassword;
     }
     if (options.cloudantLogDocument) {
         cloudantStreamOpts.LogDocument = options.cloudantLogDocument;
+    }
+    if (typeof options.cloudantLogHistory === 'boolean' && options.cloudantLogHistory === false) {
+        cloudantStreamOpts.logHistory = false;
     }
     if (options.cloudantLogFilePath) {
         cloudantStreamOpts.logFilePath = options.cloudantLogFilePath;
@@ -85,63 +84,6 @@ module.exports = function(options) {
         levelInString: true,
     });
 
-    // Create CloudantStream history logger
-    const streamsCloudant = [];
-    if (cloudantStreamOpts.logFilePath) {
-        streamsCloudant.push({
-            path: cloudantStreamOpts.logFilePath,
-        });
-    } else {
-        streamsCloudant.push({
-            stream: formatOut,
-        });
-    }
-    const loggerCloudant = bunyan.createLogger({
-        name: 'wis-logger',
-        streams: streamsCloudant,
-    });
-
-    // Define CloudantStream object
-    function CloudantStream() {}
-    CloudantStream.prototype.write = function (logRecord) {
-        if (typeof (logRecord) !== 'object') {
-            console.error(new Error('CloudantStream expecting an object logRecord but received: %j', logRecord));
-        } else {
-            if (cloudantStreamOpts.url && cloudantStreamOpts.needleOpts.username && cloudantStreamOpts.needleOpts.password) {
-                logRecord.level = bunyan.nameFromLevel[logRecord.level].toUpperCase();
-                const logDocument = new cloudantStreamOpts.LogDocument(logRecord);
-                needle('post', cloudantStreamOpts.url, logDocument, cloudantStreamOpts.needleOpts)
-                    .then(function(response) {
-                        if (cloudantStreamOpts.logHistory) {
-                            if (response.statusCode === 200 || response.statusCode === 201) {
-                                loggerCloudant.info({
-                                    result: 'Successfully created Cloudant log document',
-                                    statusCode: response.statusCode,
-                                    statusMessage: response.statusMessage,
-                                    body: response.body,
-                                });
-                            } else {
-                                loggerCloudant.error({
-                                    result: 'Failed to create Cloudant log document',
-                                    statusCode: response.statusCode,
-                                    statusMessage: response.statusMessage,
-                                    body: response.body,
-                                });
-                            }
-                        }
-                    })
-                    .catch(function(error) {
-                        if (cloudantStreamOpts.logHistory) {
-                            loggerCloudant.error('Request to Cloudant failed');
-                            loggerCloudant.error(error);
-                        }
-                    });
-            } else {
-                loggerCloudant.error('No Cloudant log document created, Cloudant URL and credentials are not configured');
-            }
-        }
-    };
-
     // Set bunyan streams
     const streams = [];
     if (bunyanOpts.console) {
@@ -152,7 +94,7 @@ module.exports = function(options) {
     if (bunyanOpts.cloudant) {
         streams.push({
             type: 'raw',
-            stream: new CloudantStream(),
+            stream: new CloudantStream(cloudantStreamOpts),
         });
     }
 
@@ -163,4 +105,10 @@ module.exports = function(options) {
         streams,
     });
     return logger;
+}
+
+module.exports = Logger;
+
+module.exports.createLogger = function createLogger(options) {
+    return new Logger(options);
 };
